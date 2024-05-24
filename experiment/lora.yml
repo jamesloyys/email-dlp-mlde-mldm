@@ -33,7 +33,7 @@ hyperparameters:
     gradient_accumulation_steps: 1
     fp16: false
     bf16: false
-    # logging_strategy: "epoch"
+    # logging_strategy: "no"
     logging_strategy: "epoch"
     # logging_steps: 10
     # evaluation_strategy: "epoch"
@@ -41,7 +41,8 @@ hyperparameters:
     eval_steps: 1000
     save_strategy: "epoch"
     # save_strategy: "no"
-    learning_rate: 8e-5
+    # learning_rate: 8e-5
+    learning_rate: 0.00008
     lr_scheduler_type: "constant"
     optim: "paged_adamw_32bit"
     group_by_length: true
