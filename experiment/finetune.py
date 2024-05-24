@@ -53,12 +53,17 @@ def download_data(cluster_info):
 
 def main(training_args, lora_args, det_callback, hparams, training_file):
     # training_data = load_dataset('json', data_files=hparams["train_dataset_path"])['train']
-    training_data = load_dataset('json', data_files=training_file)['train']
+    dataset = load_dataset('json', data_files=training_file)['train']
+    dataset = dataset.shuffle()
+    train_test_split = dataset.train_test_split(test_size=0.05)
+    training_data = train_test_split["train"]
+    eval_data = train_test_split["test"]
+
+    # training_data = load_dataset('json', data_files=training_file)['train']
     # if hparams["use_training_data_subset"] is not None:
     #     training_data = training_data.shuffle()
     #     training_data = training_data.select(indices=range(hparams["use_training_data_subset"]))
-
-    eval_data = load_dataset('json', data_files=hparams["eval_dataset_path"])['train']
+    # eval_data = load_dataset('json', data_files=hparams["eval_dataset_path"])['train']
 
     base_model_name = hparams["model"]
 
