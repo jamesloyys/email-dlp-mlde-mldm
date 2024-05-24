@@ -1,0 +1,10 @@
+peft==0.10.0
+bitsandbytes==0.43.1
+transformers==4.40.2
+trl==0.8.6
+accelerate==0.30.1
+jsonlines==4.0.0
+evaluate==0.4.2
+# deepspeed
+datasets==2.19.1
+pachyderm-sdk==2.10.1

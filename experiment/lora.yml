@@ -1,0 +1,77 @@
+name: email-dlp-lora-medical-pdk
+workspace: james.loy
+project: email-dlp-medical-pdk
+debug: false
+environment:
+  environment_variables:
+    - NCCL_DEBUG=INFO
+    # You may need to modify this to match your network configuration.
+    - NCCL_SOCKET_IFNAME=ens,eth,ib
+    - HF_HOME=/run/determined/workdir/shared_fs/james/.cache/huggingface
+    - HF_HUB_CACHE=/run/determined/workdir/shared_fs/james/.cache/huggingface/hub
+  image:
+    gpu: determinedai/environments:cuda-11.8-pytorch-2.0-gpu-95c7a14
+    # gpu: jamesloy/det-llama2-13b
+resources:
+  resource_pool: gpu-a100-40gb
+  slots_per_trial: 1
+searcher:
+  name: single
+  max_length:
+    # batches: 10
+    epochs: 3
+  metric: eval_loss
+hyperparameters:
+  model: "meta-llama/Llama-2-13b-chat-hf"
+  train_dataset_path: "data/medical_train_v4.jsonlines"
+  eval_dataset_path: "data/medical_eval.jsonlines"
+  max_seq_length: 1024
+  # use_training_data_subset: None
+  training_args:
+    output_dir: "output"
+    # max_steps: 10
+    num_train_epochs: 3
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    fp16: false
+    bf16: false
+    # logging_strategy: "epoch"
+    logging_strategy: "epoch"
+    # logging_steps: 10
+    # evaluation_strategy: "epoch"
+    evaluation_strategy: "steps"
+    eval_steps: 1000
+    save_strategy: "epoch"
+    # save_strategy: "no"
+    learning_rate: 8e-5
+    lr_scheduler_type: "constant"
+    optim: "paged_adamw_32bit"
+    group_by_length: true
+    gradient_checkpointing: true
+    ddp_find_unused_parameters: false
+  lora_args:
+    lora_alpha: 256
+    r: 256
+    lora_dropout: 0.05
+    target_modules: ["q_proj", "k_proj", "v_proj"]
+    # target_modules: ['q_proj','k_proj','v_proj','o_proj','gate_proj','up_proj','down_proj','lm_head']
+    bias: "none"
+    task_type: "CAUSAL_LM"      
+entrypoint: >-
+  python -m determined.launch.torch_distributed
+  python finetune.py
+max_restarts: 0
+bind_mounts:
+  - container_path: /run/determined/workdir/shared_fs
+    host_path: /mnt/truenas1/mlde-shared-nb
+    propagation: rprivate
+    read_only: false
+data:
+  pachyderm:
+    host:
+    port:
+    repo:
+    branch:
+    token:
+    previous_commit:
