@@ -79,7 +79,6 @@ class DetCallback(TrainerCallback):  # type: ignore
         **kwargs: Any,
     ) -> None:
         self.model.eval()
-        logger.warning(f"Model is: {type(self.model)}")
 
         with jsonlines.open(self.test_data_path) as reader:
             emails = [email for email in reader]
@@ -89,28 +88,28 @@ class DetCallback(TrainerCallback):  # type: ignore
         all_metrics = {}
 
         for idx in range(0, len(emails)):
+            logger.warning(f"Evaluating email {idx+1} of {len(emails)}")
             email = emails[idx]
             prompt = email['text'][:email['text'].find('[/INST]')+7]
             actual_categories = eval_labels[str(idx)]["restricted information found in email"]
             actual_categories = [k for k,v in actual_categories.items() if v != []]
-            logger.warning(f"Index {idx} | Actual categories is: {actual_categories}")
+            # logger.warning(f"Index {idx} | Actual categories is: {actual_categories}")
             
             model_input = self.tokenizer(prompt, return_tensors="pt").to('cuda')
             with torch.autocast(device_type='cuda'):
                 output = self.tokenizer.decode(self.model.generate(**model_input, temperature=0.01, top_p=0.9, do_sample=True, max_new_tokens=500)[0], skip_special_tokens=True)
-            logger.warning(output)
+            # logger.warning(output)
             try:
                 predicted_categories = output[output.find('[/INST]')+7:output.find('</s>')]
                 predicted_categories = json.loads(predicted_categories, strict=False)['restricted information found in email']
                 predicted_categories = [k for k,v in predicted_categories.items() if v != []]
             except:
                 predicted_categories = output[output.find('[/INST]')+7:output.find('</s>')]
-                print(predicted_categories)
                 last_comma_idx = predicted_categories.rfind(",")
                 predicted_categories = predicted_categories[:last_comma_idx] + predicted_categories[last_comma_idx+1:]
                 predicted_categories = [k for k,v in predicted_categories.items() if v != []]
 
-            logger.warning(f"Index {idx} | Predicted categories is: {predicted_categories}")
+            # logger.warning(f"Index {idx} | Predicted categories is: {predicted_categories}")
 
             true_positive, false_negative, false_positive = self._calculate_metrics(actual_categories, predicted_categories)
             all_metrics[idx] = {"true positive": true_positive, "false negative": false_negative, "false positive": false_positive}
@@ -124,7 +123,7 @@ class DetCallback(TrainerCallback):  # type: ignore
         logger.warning(f"Overall recall is {all_recall}")
 
         self.core_context.train.report_validation_metrics(
-            steps_completed=state.global_step, metrics={"train_acc": all_recall}
+            steps_completed=state.global_step, metrics={"test_acc": all_recall}
         )
         
 
