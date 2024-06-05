@@ -8,6 +8,7 @@ from transformers.trainer_utils import get_last_checkpoint
 
 import determined as det
 import jsonlines
+import torch
 
 logger = logging.getLogger("determined.transformers")
 
@@ -48,8 +49,23 @@ class DetCallback(TrainerCallback):  # type: ignore
             self.searcher_max_length = list(searcher_config["max_length"].values())[0]
             self._check_searcher_compatibility(args)
 
-    def set_model(self, model):
+    def set_model(self, model, tokenizer):
         self.model = model
+        self.tokenizer = tokenizer
+
+    def _calculate_metrics(self, actual_categories, predicted_categories):
+        true_positive, false_negative, false_positive = 0, 0, 0
+        if actual_categories == [] and predicted_categories == []:
+            true_positive += 1
+        elif actual_categories == [] and predicted_categories != []:
+            false_negative += 1
+        else:
+            for c in actual_categories:
+                if c in predicted_categories:
+                    true_positive += 1
+            false_negative = len(actual_categories) - true_positive
+        false_positive = max(len(predicted_categories) - true_positive, 0)
+        return true_positive, false_negative, false_positive
 
     def on_train_end(
         self,
@@ -63,9 +79,43 @@ class DetCallback(TrainerCallback):  # type: ignore
 
         with jsonlines.open("data/medical_eval.jsonlines") as reader:
             emails = [email for email in reader]
+        with open("data/medical_eval_ground_truth.json", "rb") as f:
+            eval_labels = json.load(f)
+
+        all_metrics = {}
+
+        for idx in range(0, len(emails)):
+            email = emails[idx]
+            prompt = email['text'][:email['text'].find('[/INST]')+7]
+            actual_categories = eval_labels[str(idx)]["restricted information found in email"]
+            actual_categories = [k for k,v in actual_categories.items() if v != []]
+            
+            model_input = self.tokenizer(prompt, return_tensors="pt").to('cuda')
+            with torch.autocast(device_type='cuda'):
+                output = self.tokenizer.decode(self.model.generate(**model_input, temperature=0.01, top_p=0.9, do_sample=True, max_new_tokens=500)[0], skip_special_tokens=True)
+            try:
+                predicted_categories = output[output.find('[/INST]')+7:output.find('</s>')]
+                predicted_categories = json.loads(predicted_categories, strict=False)['restricted information found in email']
+                predicted_categories = [k for k,v in predicted_categories.items() if v != []]
+            except:
+                predicted_categories = output[output.find('[/INST]')+7:output.find('</s>')]
+                print(predicted_categories)
+                last_comma_idx = predicted_categories.rfind(",")
+                predicted_categories = predicted_categories[:last_comma_idx] + predicted_categories[last_comma_idx+1:]
+                predicted_categories = [k for k,v in predicted_categories.items() if v != []]
+            
+            true_positive, false_negative, false_positive = self._calculate_metrics(actual_categories, predicted_categories)
+            all_metrics[idx] = {"true positive": true_positive, "false negative": false_negative, "false positive": false_positive}
+
+        all_tp, all_fn, all_fp = 0,0,0
+        for idx in all_metrics:
+            all_tp += all_metrics[idx]["true positive"]
+            all_fn += all_metrics[idx]["false negative"]
+            all_fp += all_metrics[idx]["false positive"]
+        all_recall = all_tp/(all_tp+all_fn)
 
         self.core_context.train.report_validation_metrics(
-            steps_completed=state.global_step, metrics={"train_acc": 0.8}
+            steps_completed=state.global_step, metrics={"train_acc": all_recall}
         )
         
 

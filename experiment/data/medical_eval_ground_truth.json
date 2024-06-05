@@ -1,0 +1,20 @@
+{
+    "0": {
+      "restricted information found in email": {
+        "patient's name": [
+          "Jane Doe",
+          "John Smith"
+        ],
+        "patient's phone number": [],
+        "patient's address": [
+          "123 Maple Street, Springfield"
+        ],
+        "patient ID": [],
+        "social security numbers": [
+          "987-65-4320"
+        ],
+        "patient's medications": [],
+        "patient's medical diagnosis": []
+      }
+    }
+}
