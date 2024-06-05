@@ -123,8 +123,8 @@ class DetCallback(TrainerCallback):  # type: ignore
         all_recall = all_tp/(all_tp+all_fn)
         logger.warning(f"Overall recall is {all_recall}")
 
-        self.core_context.train.report_validation_metrics(
-            steps_completed=state.global_step, metrics={"train_acc": all_recall}
+        self.core_context.train.report_metrics(
+            group="test", steps_completed=state.global_step, metrics={"train_acc": all_recall}
         )
         
 
