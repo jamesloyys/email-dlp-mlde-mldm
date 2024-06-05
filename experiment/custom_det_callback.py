@@ -89,6 +89,7 @@ class DetCallback(TrainerCallback):  # type: ignore
             prompt = email['text'][:email['text'].find('[/INST]')+7]
             actual_categories = eval_labels[str(idx)]["restricted information found in email"]
             actual_categories = [k for k,v in actual_categories.items() if v != []]
+            logger.warning(f"Index {idx} | Actual categories is: {actual_categories}")
             
             model_input = self.tokenizer(prompt, return_tensors="pt").to('cuda')
             with torch.autocast(device_type='cuda'):
@@ -103,7 +104,9 @@ class DetCallback(TrainerCallback):  # type: ignore
                 last_comma_idx = predicted_categories.rfind(",")
                 predicted_categories = predicted_categories[:last_comma_idx] + predicted_categories[last_comma_idx+1:]
                 predicted_categories = [k for k,v in predicted_categories.items() if v != []]
-            
+
+            logger.warning(f"Index {idx} | Predicted categories is: {predicted_categories}")
+
             true_positive, false_negative, false_positive = self._calculate_metrics(actual_categories, predicted_categories)
             all_metrics[idx] = {"true positive": true_positive, "false negative": false_negative, "false positive": false_positive}
 
@@ -113,6 +116,7 @@ class DetCallback(TrainerCallback):  # type: ignore
             all_fn += all_metrics[idx]["false negative"]
             all_fp += all_metrics[idx]["false positive"]
         all_recall = all_tp/(all_tp+all_fn)
+        logger.warning(f"Overall recall is {all_recall}")
 
         self.core_context.train.report_validation_metrics(
             steps_completed=state.global_step, metrics={"train_acc": all_recall}
