@@ -90,7 +90,7 @@ def main(training_args, lora_args, det_callback, hparams, training_file):
 
     trainer.add_callback(det_callback)
     trainer.train()
-    # trainer.log_metrics("test", metrics={"test_accuracy: 0.8"})
+    trainer.log_metrics("test", metrics={"test_accuracy: 0.8"})
 
 
 if __name__ == "__main__":
