@@ -89,7 +89,7 @@ def main(training_args, lora_args, det_callback, hparams, training_file):
         max_seq_length=hparams["max_seq_length"]
     )
 
-    det_callback.set_model(base_model)
+    det_callback.set_model(base_model, tokenizer)
     trainer.add_callback(det_callback)
     trainer.train()
     # trainer.log_metrics("test", metrics={"test_accuracy": 0.8})
