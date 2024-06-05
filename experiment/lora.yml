@@ -20,7 +20,7 @@ searcher:
   max_length:
     # batches: 10
     epochs: 3
-  metric: eval_loss
+  metric: test_accuracy
 hyperparameters:
   model: "meta-llama/Llama-2-13b-chat-hf"
   max_seq_length: 1024
