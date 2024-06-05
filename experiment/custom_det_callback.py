@@ -7,6 +7,7 @@ from transformers import TrainerCallback, TrainerControl, TrainerState, Training
 from transformers.trainer_utils import get_last_checkpoint
 
 import determined as det
+import jsonlines
 
 logger = logging.getLogger("determined.transformers")
 
@@ -47,6 +48,9 @@ class DetCallback(TrainerCallback):  # type: ignore
             self.searcher_max_length = list(searcher_config["max_length"].values())[0]
             self._check_searcher_compatibility(args)
 
+    def set_model(self, model):
+        self.model = model
+
     def on_train_end(
         self,
         args: TrainingArguments,
@@ -56,6 +60,9 @@ class DetCallback(TrainerCallback):  # type: ignore
     ) -> None:
         model = self.model
         logger.info(type(model))
+
+        with jsonlines.open("data/medical_eval.jsonlines") as reader:
+            emails = [email for email in reader]
 
         self.core_context.train.report_validation_metrics(
             steps_completed=state.global_step, metrics={"train_acc": 0.8}
