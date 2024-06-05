@@ -16,7 +16,8 @@ from transformers import (
 from peft import LoraConfig
 from trl import SFTTrainer
 import determined as det
-from determined.transformers import DetCallback
+# from determined.transformers import DetCallback
+from custom_det_callback import DetCallback
 from data import download_pach_repo
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ def main(training_args, lora_args, det_callback, hparams, training_file):
 
     trainer.add_callback(det_callback)
     trainer.train()
-    trainer.log_metrics("test", metrics={"test_accuracy": 0.8})
+    # trainer.log_metrics("test", metrics={"test_accuracy": 0.8})
 
 
 if __name__ == "__main__":

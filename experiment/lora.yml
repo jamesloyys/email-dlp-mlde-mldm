@@ -19,15 +19,15 @@ searcher:
   name: single
   max_length:
     # batches: 10
-    epochs: 3
-  metric: test_accuracy
+    epochs: 1
+  metric: eval_loss
 hyperparameters:
   model: "meta-llama/Llama-2-13b-chat-hf"
   max_seq_length: 1024
   training_args:
     output_dir: "output"
     # max_steps: 10
-    num_train_epochs: 3
+    num_train_epochs: 1
     per_device_train_batch_size: 1
     per_device_eval_batch_size: 1
     gradient_accumulation_steps: 1
