@@ -54,6 +54,9 @@ class DetCallback(TrainerCallback):  # type: ignore
         control: TrainerControl,
         **kwargs: Any,
     ) -> None:
+        model = self.model
+        logger.info(type(model))
+
         self.core_context.train.report_validation_metrics(
             steps_completed=state.global_step, metrics={"train_acc": 0.8}
         )
