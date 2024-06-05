@@ -59,7 +59,7 @@ class DetCallback(TrainerCallback):  # type: ignore
         **kwargs: Any,
     ) -> None:
         model = self.model
-        logger.info(type(model))
+        logger.warning(f"Model is: {type(model)}")
 
         with jsonlines.open("data/medical_eval.jsonlines") as reader:
             emails = [email for email in reader]
