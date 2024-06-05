@@ -124,4 +124,5 @@ if __name__ == "__main__":
             core_context,
             training_args
         )
+        det_callback.set_test_data(test_data_path=hparams["test_data_path"], test_data_ground_truth_path=hparams["test_data_ground_truth_path"])
         main(training_args, lora_args, det_callback, hparams, training_file)

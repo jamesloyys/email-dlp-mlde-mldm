@@ -52,6 +52,10 @@ class DetCallback(TrainerCallback):  # type: ignore
     def set_model(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
+    
+    def set_test_data(self, test_data_path, test_data_ground_truth_path):
+        self.test_data_path = test_data_path
+        self.test_data_ground_truth_path = test_data_ground_truth_path
 
     def _calculate_metrics(self, actual_categories, predicted_categories):
         true_positive, false_negative, false_positive = 0, 0, 0
@@ -74,13 +78,12 @@ class DetCallback(TrainerCallback):  # type: ignore
         control: TrainerControl,
         **kwargs: Any,
     ) -> None:
-        # model = self.model
         self.model.eval()
         logger.warning(f"Model is: {type(self.model)}")
 
-        with jsonlines.open("data/medical_eval.jsonlines") as reader:
+        with jsonlines.open(self.test_data_path) as reader:
             emails = [email for email in reader]
-        with open("data/medical_eval_ground_truth.json", "rb") as f:
+        with open(self.test_data_ground_truth_path, "rb") as f:
             eval_labels = json.load(f)
 
         all_metrics = {}

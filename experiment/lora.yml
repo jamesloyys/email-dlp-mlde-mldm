@@ -23,6 +23,8 @@ searcher:
   metric: eval_loss
 hyperparameters:
   model: "meta-llama/Llama-2-13b-chat-hf"
+  test_data_path: "data/medical_eval.jsonlines"
+  test_data_ground_truth_path: "data/medical_eval_ground_truth.json"
   max_seq_length: 1024
   training_args:
     output_dir: "output"
