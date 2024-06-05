@@ -94,6 +94,7 @@ class DetCallback(TrainerCallback):  # type: ignore
             model_input = self.tokenizer(prompt, return_tensors="pt").to('cuda')
             with torch.autocast(device_type='cuda'):
                 output = self.tokenizer.decode(self.model.generate(**model_input, temperature=0.01, top_p=0.9, do_sample=True, max_new_tokens=500)[0], skip_special_tokens=True)
+            logger.warning(output)
             try:
                 predicted_categories = output[output.find('[/INST]')+7:output.find('</s>')]
                 predicted_categories = json.loads(predicted_categories, strict=False)['restricted information found in email']
